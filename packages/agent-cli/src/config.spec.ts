@@ -46,6 +46,15 @@ describe('CLI model configuration', () => {
     });
   });
 
+  it('uses the default OpenAI model when no model override is provided', () => {
+    expect(readModelConfig({ AGENT_PROVIDER: 'openai' })).toEqual({
+      provider: 'openai',
+      model: 'gpt-5-mini',
+      baseURL: undefined,
+      apiKey: undefined,
+    });
+  });
+
   it('rejects unsupported provider names before creating a Session', () => {
     expect(() => readModelConfig({ AGENT_PROVIDER: 'anthropic' })).toThrow(
       'Unsupported AGENT_PROVIDER: anthropic',

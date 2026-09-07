@@ -1,37 +1,27 @@
-import { spawn } from 'node:child_process';
-
 import { describe, expect, it } from 'vitest';
 
+import { runNodeCli } from '../test-utils/run-node-cli.js';
+
 describe('agent CLI entry point', () => {
-  it('reports an unsupported provider without a stack trace', async () => {
-    const child = spawn(
-      process.execPath,
-      ['--no-warnings', '--import', 'tsx', 'src/main.ts'],
-      {
-        cwd: process.cwd(),
-        env: { ...process.env, AGENT_PROVIDER: 'unsupported' },
-        stdio: 'pipe',
-      },
+  it('creates a real Runtime session and exits without making a model request', async () => {
+    const result = await runNodeCli('src/main.ts', '/exit\n', {
+      AGENT_PROVIDER: 'ollama',
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toBe(
+      'ChatOllama Agent CLI\nType /exit to quit.\n\nYou> Goodbye.\n',
     );
-    let stdout = '';
-    let stderr = '';
-    child.stdout.setEncoding('utf8');
-    child.stderr.setEncoding('utf8');
-    child.stdout.on('data', chunk => {
-      stdout += chunk;
-    });
-    child.stderr.on('data', chunk => {
-      stderr += chunk;
-    });
-    child.stdin.end();
+    expect(result.stderr).toBe('');
+  });
 
-    const exitCode = await new Promise<number | null>((resolve, reject) => {
-      child.once('error', reject);
-      child.once('close', resolve);
+  it('reports an unsupported provider without a stack trace', async () => {
+    const result = await runNodeCli('src/main.ts', '', {
+      AGENT_PROVIDER: 'unsupported',
     });
 
-    expect(exitCode).toBe(1);
-    expect(stdout).toBe('');
-    expect(stderr).toBe('Unsupported AGENT_PROVIDER: unsupported\n');
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toBe('Unsupported AGENT_PROVIDER: unsupported\n');
   });
 });

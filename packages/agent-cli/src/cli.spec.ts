@@ -67,6 +67,56 @@ describe('Runtime event-driven CLI', () => {
 
     expect(runtime.inputs).toEqual([]);
     expect(terminal.stdout()).toContain('Goodbye.\n');
+    expect(runtime.listenerCount).toBe(0);
+  });
+
+  it('cleans up the Runtime subscription when terminal input closes', async () => {
+    const runtime = new ControlledRuntime();
+    const terminal = createTerminal();
+    const cli = runCli({ session: runtime, ...terminal.streams });
+
+    await vi.waitFor(() => expect(terminal.stdout()).toContain('You> '));
+    terminal.input.end();
+    await cli;
+
+    expect(runtime.inputs).toEqual([]);
+    expect(runtime.listenerCount).toBe(0);
+    expect(terminal.stdout()).not.toContain('Goodbye.\n');
+  });
+
+  it('ignores blank input without submitting it to the Runtime', async () => {
+    const runtime = new ControlledRuntime();
+    const terminal = createTerminal();
+    const cli = runCli({ session: runtime, ...terminal.streams });
+
+    await vi.waitFor(() => expect(terminal.stdout()).toContain('You> '));
+    terminal.input.write('   \n');
+    await vi.waitFor(() =>
+      expect(terminal.stdout().match(/You> /g)).toHaveLength(2),
+    );
+    terminal.input.write('/exit\n');
+    await cli;
+
+    expect(runtime.inputs).toEqual([]);
+  });
+
+  it('reports a generic error when prompt rejects without a failure event', async () => {
+    const runtime = new ControlledRuntime();
+    const terminal = createTerminal();
+    const cli = runCli({ session: runtime, ...terminal.streams });
+
+    await vi.waitFor(() => expect(terminal.stdout()).toContain('You> '));
+    terminal.input.write('Hello\n');
+    await vi.waitFor(() => expect(runtime.inputs).toEqual(['Hello']));
+    runtime.failPrompt();
+
+    await vi.waitFor(() =>
+      expect(terminal.stdout().match(/You> /g)).toHaveLength(2),
+    );
+    terminal.input.write('/exit\n');
+    await cli;
+
+    expect(terminal.stderr()).toBe('[error] Runtime prompt failed\n');
   });
 
   it('prints a Runtime failure once and continues to the next prompt', async () => {
@@ -111,6 +161,11 @@ describe('Runtime event-driven CLI', () => {
     terminal.input.write('Hello\n');
     await vi.waitFor(() => expect(runtime.inputs).toEqual(['Hello']));
     runtime.emit({ type: 'run.started', runId: 'run-1', input: 'Hello' });
+    runtime.emit({
+      type: 'model.started',
+      runId: 'run-1',
+      model: { provider: 'openai', model: 'gpt-test' },
+    });
     runtime.emit({ type: 'run.cancelled', runId: 'run-1' });
     runtime.completePrompt();
 
@@ -120,6 +175,7 @@ describe('Runtime event-driven CLI', () => {
     terminal.input.write('/exit\n');
     await cli;
 
+    expect(terminal.stdout()).toContain('Assistant (openai/gpt-test)> \n');
     expect(terminal.stderr()).toBe(
       '[run run-1] started\n[run run-1] cancelled\n',
     );
@@ -131,6 +187,10 @@ class ControlledRuntime implements AgentSession {
   readonly #listeners = new Set<RuntimeEventListener>();
   #resolvePrompt: (() => void) | undefined;
   #rejectPrompt: ((error: Error) => void) | undefined;
+
+  get listenerCount(): number {
+    return this.#listeners.size;
+  }
 
   getSnapshot() {
     return { id: 'mock-session', messages: [] };
