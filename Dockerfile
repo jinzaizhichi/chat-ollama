@@ -10,6 +10,7 @@ WORKDIR /app
 ENV DATABASE_URL=file:/app/sqlite/chatollama.sqlite
 
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+COPY packages/agent-cli/package.json ./packages/agent-cli/package.json
 COPY packages/agent-runtime/package.json ./packages/agent-runtime/package.json
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile

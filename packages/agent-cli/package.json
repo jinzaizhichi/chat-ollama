@@ -1,0 +1,24 @@
+{
+  "name": "@chatollama/agent-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "demo": "node --no-warnings --import tsx examples/mock-runtime.ts",
+    "start": "node --no-warnings --import tsx src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chatollama/agent-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

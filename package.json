@@ -6,14 +6,16 @@
     "node": ">=24"
   },
   "scripts": {
+    "agent:cli": "pnpm --filter @chatollama/agent-cli start",
+    "agent:cli:demo": "pnpm --filter @chatollama/agent-cli demo",
     "agent:example": "pnpm --filter @chatollama/agent-runtime example",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test:agent": "pnpm --filter @chatollama/agent-runtime test",
-    "typecheck:agent": "pnpm --filter @chatollama/agent-runtime typecheck",
+    "test:agent": "pnpm --filter './packages/agent-*' test",
+    "typecheck:agent": "pnpm --filter './packages/agent-*' typecheck",
     "prisma-deploy": "prisma migrate deploy",
     "prisma-migrate": "prisma migrate dev",
     "prisma-generate": "prisma generate",
