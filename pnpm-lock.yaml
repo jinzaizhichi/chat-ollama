@@ -268,6 +268,25 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0(vue@3.4.31(typescript@5.5.2))
 
+  packages/agent-cli:
+    dependencies:
+      '@chatollama/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
+      tsx:
+        specifier: 4.20.5
+        version: 4.20.5
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.13.3)(jsdom@24.0.0)(sass@1.77.4)(terser@5.30.3)
+
   packages/agent-runtime:
     dependencies:
       '@ai-sdk/openai':
